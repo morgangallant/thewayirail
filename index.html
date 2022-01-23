@@ -30,7 +30,6 @@
     <!-- self explanatory -->
   </div>
   <div id="results" hidden>
-    <button id="reset">Reset</button>
     <div id="results_table"></div>
   </div>
   <!-- JS -->
@@ -41,7 +40,6 @@
     var loadingBox = document.getElementById('loading');
     var resultsBox = document.getElementById('results');
     var resultsTable = document.getElementById('results_table');
-    var reset = document.getElementById('reset');
 
     // Data
     var returnedData = null;
@@ -69,8 +67,8 @@
 			resultsTable.appendChild(table);
 		};
 
-		const CHEIGHT = 700;
-		const CWIDTH = 1400;
+		const CHEIGHT = 1000;
+		const CWIDTH = 1500;
     // Handler for form submission.
     const handleSubmission = async (e) => {
       if (e.preventDefault) e.preventDefault();
@@ -97,32 +95,45 @@
         form.addEventListener("submit", handleSubmission);
     }
 
-    // Handler for reset.
-    const handleReset = () => {
-      remove();
-      resultsBox.hidden = true;
-      form.reset();
-      csvInputBox.hidden = false;
-      resultsTable.innerHTML = '';
-    };
-    reset.addEventListener("click", handleReset);
-
 	// Class for train
 	class Train {
-		constructor(size, tnum, departure) {
-			this.x = 0;
-			this.y = CHEIGHT/2;
-			this.size = size;
-			this.speed = 1;
-			this.text = tnum;
-			this.departure = departure;
+		constructor(manifest) {
+			this.x = CWIDTH/5;
+			this.y = ((manifest.TrainNum+1) * CHEIGHT/17) - 30;
+			this.aArrived = false;
+			this.bArrived = false;
+			this.cArrived = false;
+			this.height = 50;
+			this.manifest = manifest;
+			if (manifest.TrainType == "L4") {
+				this.capacity = 200;
+				this.width = 100;
+			} else {
+				this.capacity = 400;
+				this.width = 200;
+			}
+			this.speed = 0.1*(CWIDTH/5 * 4)/37;
+			this.passengers = 0;
 		}
 
 		move() {
-			if (m >= this.departure) {
+			if ( (m >= this.manifest.AArrivalTime+3 && m <= this.manifest.BArrivalTime) ||
+					 (m >= this.manifest.BArrivalTime+3 && m <= this.manifest.CArrivalTime) ||
+					 (m >= this.manifest.CArrivalTime+3 && m <= this.manifest.UArrivalTime)) {
 				this.x += this.speed;
 			}
-
+			if (m == this.manifest.AArrivalTime && this.aArrived == false) {
+				this.passengers += this.manifest.ABoarding;
+				this.aArrived = true;
+			}
+			if (m == this.manifest.BArrivalTime && this.bArrived == false) {
+				this.passengers += this.manifest.BBoarding;
+				this.bArrived = true;
+			}
+			if (m == this.manifest.CArrivalTime && this.cArrived == false) {
+				this.passengers += this.manifest.CBoarding;
+				this.cArrived = true;
+			}
 		}
 
 		display() {
@@ -130,16 +141,16 @@
 			textAlign(CENTER, CENTER);
 			noFill();
 			rectMode(CENTER);
-			rect(this.x, this.y, this.size*2, this.size);
+			rect(this.x, this.y, this.width, this.height);
 			fill(0);
-			text(this.text, this.x, this.y);
+			text(this.passengers + "/" + this.capacity, this.x, this.y);
 		}
 	}
 
 	class Station {
 		constructor(text, pos) {
 			this.x = CWIDTH/5 * pos;
-			this.y = CHEIGHT/2 - 50;
+			this.y = (CHEIGHT/17)-30;
 			this.text = text;
 		}
 
@@ -153,10 +164,12 @@
 		}
 	}
 
+	let trains = [];
 	function buildCanvas() {
 		  createCanvas(CWIDTH, CHEIGHT);
-			t1 = new Train(50, "10/200", returnedData[0].AArrivalTime);
-			t2 = new Train(50, "0/200", returnedData[1].AArrivalTime);
+			for (i=0; i<16; i++) {
+				trains.push(new Train(returnedData[i]))
+			}
 			a = new Station("A", 1);
 			b = new Station("B", 2);
 			c = new Station("C", 3);
@@ -171,15 +184,14 @@
 		background(200);
 
 		fill(0);
-		text(m, 100, 100);
-		t+= 0.01;
+		text(`${7 + Math.floor(m/60)}:${m % 60}`, 100, 100);
+		t+= 0.1;
 		m = Math.floor(t);
-		
-		t1.move();
-		t1.display();
-		t2.move();
-		t2.display();
 
+		for (i=0; i<16; i++) {
+			trains[i].move();
+			trains[i].display();
+		}
 		a.display();
 		b.display();
 		c.display();
