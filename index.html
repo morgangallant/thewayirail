@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Way I Rail</title>
+  <script src="https://cdn.jsdelivr.net/npm/p5@1.4.0/lib/p5.js"></script>
+</head>
+<body>
+  <div id="csv_input">
+    <p>Please upload your input file:</p>
+    <form
+      enctype="multipart/form-data"
+      action="/schedule"
+      method="post"
+      id="submission-form"
+    >
+      <input type="file" name="input" />
+      <input type="submit" value="Upload" />
+    </form>
+  </div>
+  <div id="loading" hidden>
+		<p>Loading...</p>
+    <!-- self explanatory -->
+  </div>
+  <div id="results" hidden>
+    <button id="reset">Reset</button>
+    <div id="results_table"></div>
+  </div>
+  <!-- JS -->
+  <script>
+    // Selectors.
+    var form = document.getElementById('submission-form');
+    var csvInputBox = document.getElementById('csv_input');
+    var loadingBox = document.getElementById('loading');
+    var resultsBox = document.getElementById('results');
+    var resultsTable = document.getElementById('results_table');
+    var reset = document.getElementById('reset');
+
+    // Data
+    var returnedData = null;
+
+    /*
+  type scheduleEntry struct {
+	TrainNum     int
+	TrainType    trainType
+	AArrivalTime int
+	AAvailCap    int
+	ABoarding    int
+	BArrivalTime int
+	BAvailCap    int
+	BBoarding    int
+	CArrivalTime int
+	CAvailCap    int
+	CBoarding    int
+	UArrivalTime int
+	UAvailCap    int
+	UOffloading  int
+}
+    */
+
+    // // Renders the returned data as a table.
+    // const renderReturnedData = () => {
+    //   let table = document.createElement('table');
+    //   resultsTable.body.appendChild(table);
+    //   let header = document.createElement('tr');
+    //   // for (let h : ['Train #', 'Type', 'A Arrival Time', ''])
+    // };
+
+		const CHEIGHT = 700;
+		const CWIDTH = 1400;
+    // Handler for form submission.
+    const handleSubmission = async (e) => {
+      if (e.preventDefault) e.preventDefault();
+      csvInputBox.hidden = true;
+			loading.hidden = false;
+      let data = new FormData(form);
+      let response = await fetch(form.action, {
+        method: form.method,
+        body: data,
+      });
+      let rdata = await response.json();
+      loading.hidden = true;
+      returnedData = rdata;
+      console.log(rdata);
+      buildCanvas();
+      // renderReturnedData();
+      results.hidden = false;
+      return false; // Prevents random stuff from happening.
+    };
+    // Setup listener for form.
+    if (form.attachEvent) {
+        form.attachEvent("submit", handleSubmission);
+    } else {
+        form.addEventListener("submit", handleSubmission);
+    }
+
+    // Handler for reset.
+    const handleReset = () => {
+      remove();
+      results.hidden = true;
+      form.reset();
+      csvInputBox.hidden = false;
+      resultsTable.innerHTML = '';
+    };
+    reset.addEventListener("click", handleReset);
+
+	// Class for train
+	class Train {
+		constructor(size, tnum, departure) {
+			this.x = 0;
+			this.y = CHEIGHT/2;
+			this.size = size;
+			this.speed = 1;
+			this.text = tnum;
+			this.departure = departure;
+		}
+
+		move() {
+			if (m >= this.departure) {
+				this.x += this.speed;
+			}
+
+		}
+
+		display() {
+			textSize(24);
+			textAlign(CENTER, CENTER);
+			noFill();
+			rectMode(CENTER);
+			rect(this.x, this.y, this.size*2, this.size);
+			fill(0);
+			text(this.text, this.x, this.y);
+		}
+	}
+
+	class Station {
+		constructor(text, pos) {
+			this.x = CWIDTH/5 * pos;
+			this.y = CHEIGHT/2 - 50;
+			this.text = text;
+		}
+
+		display() {
+			rectMode(CENTER);
+			fill(color("#009118"));
+			rect(this.x, this.y, 50, 50);
+			fill(0);
+			textAlign(CENTER, CENTER);
+			text(this.text, this.x, this.y);
+		}
+	}
+
+	function buildCanvas() {
+		  createCanvas(CWIDTH, CHEIGHT);
+			t1 = new Train(50, "10/200", returnedData[0].AArrivalTime);
+			t2 = new Train(50, "0/200", returnedData[1].AArrivalTime);
+			a = new Station("A", 1);
+			b = new Station("B", 2);
+			c = new Station("C", 3);
+			u = new Station("U", 4);
+	}
+	// P5.js processing
+	var t = 0;
+	var m = 0;
+	// var 
+	function draw() {
+		if (!returnedData) return;
+		background(200);
+
+		fill(0);
+		text(m, 100, 100);
+		t+= 0.01;
+		m = Math.floor(t);
+		
+		t1.move();
+		t1.display();
+		t2.move();
+		t2.display();
+
+		a.display();
+		b.display();
+		c.display();
+		u.display();
+	}
+  </script>
+</body>
+</html>
