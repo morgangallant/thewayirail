@@ -392,7 +392,7 @@ func getOptimizedSchedule(arrivals []arrivalSample) ([]scheduleEntry, error) {
 	if err != nil {
 		return nil, err
 	}
-	ga.NGenerations = 10
+	ga.NGenerations = 500
 	if err := ga.Minimize(genomeMachine(arrivals)); err != nil {
 		return nil, err
 	}
