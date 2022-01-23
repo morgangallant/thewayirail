@@ -5,6 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>The Way I Rail</title>
   <script src="https://cdn.jsdelivr.net/npm/p5@1.4.0/lib/p5.js"></script>
+	<style>
+		td {
+			border: 1px solid black;
+			padding: 5px;
+		}
+	</style>
 </head>
 <body>
   <div id="csv_input">
@@ -40,32 +46,28 @@
     // Data
     var returnedData = null;
 
-    /*
-  type scheduleEntry struct {
-	TrainNum     int
-	TrainType    trainType
-	AArrivalTime int
-	AAvailCap    int
-	ABoarding    int
-	BArrivalTime int
-	BAvailCap    int
-	BBoarding    int
-	CArrivalTime int
-	CAvailCap    int
-	CBoarding    int
-	UArrivalTime int
-	UAvailCap    int
-	UOffloading  int
-}
-    */
-
-    // // Renders the returned data as a table.
-    // const renderReturnedData = () => {
-    //   let table = document.createElement('table');
-    //   resultsTable.body.appendChild(table);
-    //   let header = document.createElement('tr');
-    //   // for (let h : ['Train #', 'Type', 'A Arrival Time', ''])
-    // };
+    // Renders the returned data as a table.
+    const renderReturnedData = () => {
+      let table = document.createElement('table');
+      let header = document.createElement('tr');
+			let headings = ['Train #', 'Type', 'A Arrival Time', 'A Capacity', 'A Boarding', 'B Arrival Time', 'B Capacity', 'B Boarding', 'C Arrival Time', 'C Capacity', 'C Boarding', 'U Arrival Time', 'U Capacity', 'U Offloading'];
+      for (let i = 0; i < headings.length; i++) {
+				let th = document.createElement('th');
+				th.innerHTML = headings[i];
+				header.appendChild(th);
+			}
+			table.appendChild(header);
+			for (let i = 0; i < returnedData.length; i++) {
+				let row = document.createElement('tr');
+				for (var k in returnedData[i]) {
+					let td = document.createElement('td');
+					td.innerHTML = returnedData[i][k];
+					row.appendChild(td);
+				}
+				table.appendChild(row);
+			}
+			resultsTable.appendChild(table);
+		};
 
 		const CHEIGHT = 700;
 		const CWIDTH = 1400;
@@ -84,8 +86,8 @@
       returnedData = rdata;
       console.log(rdata);
       buildCanvas();
-      // renderReturnedData();
-      results.hidden = false;
+      renderReturnedData();
+      resultsBox.hidden = false;
       return false; // Prevents random stuff from happening.
     };
     // Setup listener for form.
@@ -98,7 +100,7 @@
     // Handler for reset.
     const handleReset = () => {
       remove();
-      results.hidden = true;
+      resultsBox.hidden = true;
       form.reset();
       csvInputBox.hidden = false;
       resultsTable.innerHTML = '';
